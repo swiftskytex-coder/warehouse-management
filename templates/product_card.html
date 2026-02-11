@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СКЛАД: {{ product.title }} | Арт. {{ product.article }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        /* Шапка */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .header-left {
+            flex: 1;
+        }
+        
+        .warehouse-label {
+            display: inline-block;
+            background: #ff6b35;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .header h1 {
+            font-size: 1.8em;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+        
+        .article-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1.3em;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .article-badge small {
+            display: block;
+            font-size: 0.6em;
+            font-weight: normal;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        /* Основной контент */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        /* Фото */
+        .photo-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .main-image-container {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .main-image {
+            max-width: 100%;
+            max-height: 380px;
+            object-fit: contain;
+        }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+        
+        .gallery-thumb {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+        
+        .gallery-thumb:hover {
+            border-color: #2a5298;
+        }
+        
+        .no-image {
+            width: 100%;
+            height: 380px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+        }
+        
+        .no-image-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+        
+        /* Информация */
+        .info-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        /* Цена */
+        .price-block {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .price-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .price-value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        
+        /* Статус наличия */
+        .stock-status {
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .stock-in {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+        
+        .stock-out {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+        
+        /* Мета-информация */
+        .meta-block {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #2a5298;
+        }
+        
+        .meta-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .meta-item:last-child {
+            border-bottom: none;
+        }
+        
+        .meta-label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .meta-value {
+            color: #333;
+            text-align: right;
+        }
+        
+        /* Складская информация */
+        .warehouse-info {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .warehouse-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .location-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .location-item {
+            background: white;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        
+        .location-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        
+        .location-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* Количество */
+        .quantity-section {
+            background: #d1ecf1;
+            border: 2px solid #17a2b8;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .quantity-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #0c5460;
+            margin-bottom: 15px;
+        }
+        
+        .quantity-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .quantity-item {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .quantity-item.actual {
+            border: 2px solid #28a745;
+        }
+        
+        .quantity-item.reserved {
+            border: 2px solid #ffc107;
+        }
+        
+        .quantity-item.available {
+            border: 2px solid #17a2b8;
+        }
+        
+        .quantity-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .quantity-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .quantity-value.available {
+            color: #17a2b8;
+        }
+        
+        /* Характеристики */
+        .specs-section {
+            grid-column: 1 / -1;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .specs-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        
+        .specs-content {
+            padding: 20px;
+        }
+        
+        .spec-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .spec-row:last-child {
+            border-bottom: none;
+        }
+        
+        .spec-name {
+            font-weight: 600;
+            color: #2a5298;
+        }
+        
+        /* Описание */
+        .description-section {
+            grid-column: 1 / -1;
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+        }
+        
+        .description-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2a5298;
+            margin-bottom: 15px;
+        }
+        
+        .description-text {
+            line-height: 1.8;
+            color: #555;
+        }
+        
+        /* Этикетка */
+        .label-section {
+            grid-column: 1 / -1;
+            background: white;
+            border: 3px dashed #333;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+        
+        .label-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .label-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .label-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        
+        .label-item strong {
+            display: block;
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        
+        /* Подвал */
+        .footer {
+            background: #2a5298;
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .footer a {
+            color: white;
+        }
+        
+        .print-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .btn-print {
+            background: white;
+            color: #2a5298;
+        }
+        
+        .btn-back {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        /* Печать */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+            }
+            
+            .print-buttons {
+                display: none;
+            }
+            
+            .gallery {
+                display: none;
+            }
+            
+            .footer {
+                background: #333;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .article-badge {
+                margin-top: 15px;
+            }
+            
+            .label-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка -->
+        <div class="header">
+            <div class="header-left">
+                <div class="warehouse-label">📦 СКЛАДСКАЯ КАРТОЧКА</div>
+                <h1>{{ product.title }}</h1>
+            </div>
+            <div class="article-badge">
+                {{ product.article }}
+                <small>АРТИКУЛ</small>
+            </div>
+        </div>
+        
+        <!-- Основной контент -->
+        <div class="main-content">
+            <!-- Фото -->
+            <div class="photo-section">
+                {% if product.images %}
+                <div class="main-image-container">
+                    <img src="{{ product.images[0].image_url if product.images else '' }}" 
+                         alt="{{ product.title }}" 
+                         class="main-image"
+                         id="mainImage"
+                         onerror="this.parentElement.innerHTML='<div class=no-image><div class=no-image-icon>📷</div><div>Нет фото</div></div>'">
+                </div>
+                
+                {% if product.images|length > 1 %}
+                <div class="gallery">
+                    {% for image in product.images[:5] %}
+                    <img src="{{ image.image_url }}" 
+                         class="gallery-thumb" 
+                         onclick="document.getElementById('mainImage').src='{{ image.image_url }}'"
+                         alt="">
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="no-image">
+                    <div class="no-image-icon">📷</div>
+                    <div>Нет фото</div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Информация -->
+            <div class="info-section">
+                <!-- Цена -->
+                {% if product.price %}
+                <div class="price-block">
+                    <div class="price-label">Цена</div>
+                    <div class="price-value">{{ product.price }}</div>
+                </div>
+                {% endif %}
+                
+                <!-- Статус -->
+                {% if product.stock %}
+                {% set available = product.stock.quantity_actual - product.stock.quantity_reserved %}
+                <div class="stock-status {{ 'stock-in' if available > 0 else 'stock-out' }}">
+                    {% if available > 0 %}
+                    ✅ В НАЛИЧИИ
+                    {% else %}
+                    ❌ НЕТ В НАЛИЧИИ
+                    {% endif %}
+                </div>
+                
+                <!-- Местоположение -->
+                <div class="warehouse-info">
+                    <div class="warehouse-title">📍 Местоположение на складе</div>
+                    <div class="location-grid">
+                        <div class="location-item">
+                            <div class="location-label">Зона</div>
+                            <div class="location-value">{{ product.stock.zone or '—' }}</div>
+                        </div>
+                        <div class="location-item">
+                            <div class="location-label">Стеллаж</div>
+                            <div class="location-value">{{ product.stock.rack or '—' }}</div>
+                        </div>
+                        <div class="location-item">
+                            <div class="location-label">Полка</div>
+                            <div class="location-value">{{ product.stock.shelf or '—' }}</div>
+                        </div>
+                        <div class="location-item">
+                            <div class="location-label">Ячейка</div>
+                            <div class="location-value">{{ product.stock.cell or '—' }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Количество -->
+                <div class="quantity-section">
+                    <div class="quantity-title">📦 Количество на складе</div>
+                    <div class="quantity-grid">
+                        <div class="quantity-item actual">
+                            <div class="quantity-label">Фактически</div>
+                            <div class="quantity-value">{{ product.stock.quantity_actual or 0 }}</div>
+                        </div>
+                        <div class="quantity-item reserved">
+                            <div class="quantity-label">Зарезервировано</div>
+                            <div class="quantity-value">{{ product.stock.quantity_reserved or 0 }}</div>
+                        </div>
+                        <div class="quantity-item available">
+                            <div class="quantity-label">Доступно</div>
+                            <div class="quantity-value available">{{ available }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Мета-информация -->
+                <div class="meta-block">
+                    <div class="meta-item">
+                        <span class="meta-label">🏭 Производитель</span>
+                        <span class="meta-value">{{ product.manufacturer or '—' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">📁 Категория</span>
+                        <span class="meta-value">{{ product.category or '—' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">⚖️ Вес</span>
+                        <span class="meta-value">{{ product.weight or '—' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">📐 Размеры</span>
+                        <span class="meta-value">{{ product.dimensions or '—' }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Характеристики -->
+            {% if product.specifications %}
+            {% set specs = product.specifications|fromjson if product.specifications else {} %}
+            {% if specs %}
+            <div class="specs-section">
+                <div class="specs-header">📋 Технические характеристики</div>
+                <div class="specs-content">
+                    {% for key, value in specs.items() %}
+                    <div class="spec-row">
+                        <span class="spec-name">{{ key }}</span>
+                        <span>{{ value }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+            
+            <!-- Описание -->
+            {% if product.description %}
+            <div class="description-section">
+                <div class="description-title">📝 Описание товара</div>
+                <div class="description-text">
+                    {{ product.description[:1000] }}{% if product.description|length > 1000 %}...{% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Этикетка для печати -->
+            <div class="label-section">
+                <div class="label-title">🏷️ ДАННЫЕ ДЛЯ ЭТИКЕТКИ</div>
+                <div class="label-content">
+                    <div class="label-item">
+                        <strong>Артикул</strong>
+                        {{ product.article }}
+                    </div>
+                    <div class="label-item">
+                        <strong>Название</strong>
+                        {{ product.title[:30] }}{% if product.title|length > 30 %}...{% endif %}
+                    </div>
+                    <div class="label-item">
+                        <strong>Место</strong>
+                        {{ product.stock.zone or '-' }}-{{ product.stock.rack or '-' }}-{{ product.stock.shelf or '-' }}-{{ product.stock.cell or '-' }}
+                    </div>
+                    <div class="label-item">
+                        <strong>Кол-во</strong>
+                        {{ product.stock.quantity_actual or 0 }} шт.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Подвал -->
+        <div class="footer">
+            <div>
+                Источник: <a href="{{ product.url }}" target="_blank">snab-lift.ru</a> | 
+                Дата печати: {{ product.updated_at.strftime('%d.%m.%Y %H:%M') if product.updated_at else '—' }}
+            </div>
+            <div class="print-buttons">
+                <button class="btn btn-back" onclick="window.location.href='/'">← Назад к списку</button>
+                <button class="btn btn-print" onclick="window.print()">🖨️ Печать</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
