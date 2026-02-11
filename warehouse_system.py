@@ -671,6 +671,16 @@ def product_card(article):
     
     return render_template('product_card.html', product=product)
 
+# ========== ИИ-ПОИСК ==========
+
+# Импортируем и регистрируем ИИ-поиск (если есть API ключ)
+try:
+    from ai_search_api import ai_search_bp
+    app.register_blueprint(ai_search_bp)
+    print("✅ ИИ-поиск подключен")
+except Exception as e:
+    print(f"⚠️ ИИ-поиск не подключен: {e}")
+
 # ========== ЗАПУСК ==========
 
 if __name__ == '__main__':
@@ -694,3 +704,35 @@ if __name__ == '__main__':
         print("=" * 70)
     
     app.run(debug=True, host='0.0.0.0', port=8080, use_reloader=False)
+
+# ========== API ДЛЯ ОЗВУЧКИ ==========
+
+@app.route('/api/speak', methods=['POST'])
+def speak_text():
+    """Озвучивает текст через macOS say"""
+    try:
+        import subprocess
+        import platform
+        
+        data = request.get_json()
+        text = data.get('text', '')
+        
+        if not text:
+            return jsonify({'success': False, 'error': 'Пустой текст'})
+        
+        # Проверяем что это macOS
+        if platform.system() == 'Darwin':
+            # Ограничиваем длину
+            text = text[:500]
+            
+            # Запускаем say в фоне
+            subprocess.Popen(['say', '-r', '180', text], 
+                           stdout=subprocess.DEVNULL, 
+                           stderr=subprocess.DEVNULL)
+            
+            return jsonify({'success': True, 'message': 'Озвучивается'})
+        else:
+            return jsonify({'success': False, 'error': 'Озвучка доступна только на macOS'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
