@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "warehouse": {
+      "command": "python",
+      "args": ["/Users/swiftpanaev/KIRO/test3/mcp_server.py"],
+      "env": {
+        "PYTHONPATH": "/Users/swiftpanaev/KIRO/test3"
+      }
+    }
+  }
+}
