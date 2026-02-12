@@ -33,11 +33,15 @@ def ai_search():
                     'cost': 0
                 })
             
-            # Формируем контекст
+            # Формируем контекст с местоположением
             context = []
             for p in products:
                 stock = p.stock.quantity_actual if p.stock else 0
-                context.append(f"{p.article}: {p.title} ({p.manufacturer or '?'}) - {stock} шт.")
+                # Местоположение
+                location = "не указано"
+                if p.stock and any([p.stock.zone, p.stock.rack, p.stock.shelf, p.stock.cell]):
+                    location = f"{p.stock.zone or '-'}-{p.stock.rack or '-'}-{p.stock.shelf or '-'}-{p.stock.cell or '-'}"
+                context.append(f"{p.article}: {p.title} ({p.manufacturer or '?'}) - {stock} шт., место: {location}")
             
             # Запрос к AI
             prompt = f"""Ты - помощник склада лифтовых запчастей.
@@ -50,7 +54,10 @@ def ai_search():
 Найди подходящие товары. Ответь кратко:
 - Артикул и название
 - Почему подходит
-- Количество на складе"""
+- Количество на складе
+- **Местоположение** (зона-стеллаж-полка-ячейка)
+
+Если местоположение не задано - укажи это."""
 
             response = requests.post(
                 "https://openrouter.ai/api/v1/chat/completions",

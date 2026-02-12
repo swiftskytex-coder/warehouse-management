@@ -50,7 +50,12 @@ class AISearchWithVoice:
         items = []
         for p in products[:50]:
             stock_qty = p.stock.quantity_actual if p.stock else 0
-            item = f"Артикул {p.article}: {p.title}, {p.manufacturer or 'не указан'}, {stock_qty} штук"
+            # Формируем местоположение
+            location = "не указано"
+            if p.stock and any([p.stock.zone, p.stock.rack, p.stock.shelf, p.stock.cell]):
+                location = f"{p.stock.zone or '-'}-{p.stock.rack or '-'}-{p.stock.shelf or '-'}-{p.stock.cell or '-'}"
+            
+            item = f"Артикул {p.article}: {p.title}, {p.manufacturer or 'не указан'}, {stock_qty} штук, место: {location}"
             items.append(item)
         return "\n".join(items)
     
@@ -68,7 +73,9 @@ class AISearchWithVoice:
 1. Назови артикул и название
 2. Почему подходит
 3. Сколько на складе
+4. **Укажи местоположение** (зона-стеллаж-полка-ячейка)
 
+Если местоположение не задано - напиши об этом.
 Если не нашел - скажи прямо."""
 
         try:

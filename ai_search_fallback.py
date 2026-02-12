@@ -42,11 +42,15 @@ class AISearchWithFallback:
         if not products:
             return "❌ База данных пуста. Сначала импортируйте товары."
         
-        # Формируем контекст
+        # Формируем контекст с местоположением
         context = []
         for p in products:
             stock = p.stock.quantity_actual if p.stock else 0
-            context.append(f"{p.article}: {p.title}, {p.manufacturer or 'не указан'}, {stock} шт.")
+            # Местоположение
+            location = "не указано"
+            if p.stock and any([p.stock.zone, p.stock.rack, p.stock.shelf, p.stock.cell]):
+                location = f"{p.stock.zone or '-'}-{p.stock.rack or '-'}-{p.stock.shelf or '-'}-{p.stock.cell or '-'}"
+            context.append(f"{p.article}: {p.title}, {p.manufacturer or 'не указан'}, {stock} шт., место: {location}")
         
         # Запрос к AI
         prompt = f"""Ты - помощник склада лифтовых запчастей.
@@ -58,8 +62,11 @@ class AISearchWithFallback:
 
 Найди подходящие товары. Ответь кратко:
 - Артикул и название
-- Почему подходит  
-- Количество на складе"""
+- Почему подходит
+- Количество на складе
+- **Местоположение** (зона-стеллаж-полка-ячейка)
+
+Если местоположение не задано - напиши об этом."""
 
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
@@ -109,10 +116,16 @@ class AISearchWithFallback:
         result = f"📋 Результаты поиска (обычный режим):\n\n"
         for p in products:
             stock = p.stock.quantity_actual if p.stock else 0
+            # Местоположение
+            location = "не указано"
+            if p.stock and any([p.stock.zone, p.stock.rack, p.stock.shelf, p.stock.cell]):
+                location = f"{p.stock.zone or '-'}-{p.stock.rack or '-'}-{p.stock.shelf or '-'}-{p.stock.cell or '-'}"
+            
             result += f"🏷️  Артикул: {p.article}\n"
             result += f"   Название: {p.title}\n"
             result += f"   Производитель: {p.manufacturer or 'не указан'}\n"
-            result += f"   Количество: {stock} шт.\n\n"
+            result += f"   Количество: {stock} шт.\n"
+            result += f"   📍 Местоположение: {location}\n\n"
         
         result += "💡 Для ИИ-поиска обновите API ключ в ai_search_voice.py"
         return result

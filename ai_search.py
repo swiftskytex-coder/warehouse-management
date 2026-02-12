@@ -49,11 +49,16 @@ class AISearch:
             return response
     
     def _format_products(self, products):
-        """Форматирует товары для контекста AI"""
+        """Форматирует товары для контекста AI с местоположением"""
         items = []
         for p in products[:50]:  # Берем первые 50 для экономии токенов
             stock_qty = p.stock.quantity_actual if p.stock else 0
-            item = f"Артикул: {p.article}, Название: {p.title}, Производитель: {p.manufacturer or 'не указан'}, Количество: {stock_qty}"
+            # Формируем местоположение
+            location = "не указано"
+            if p.stock and any([p.stock.zone, p.stock.rack, p.stock.shelf, p.stock.cell]):
+                location = f"{p.stock.zone or '-'}-{p.stock.rack or '-'}-{p.stock.shelf or '-'}-{p.stock.cell or '-'}"
+            
+            item = f"Артикул: {p.article}, Название: {p.title}, Производитель: {p.manufacturer or 'не указан'}, Количество: {stock_qty}, Место: {location}"
             items.append(item)
         return "\n".join(items)
     
@@ -71,7 +76,9 @@ class AISearch:
 1. Назови артикул и название найденного товара
 2. Объясни почему он подходит
 3. Укажи количество на складе
+4. **Укажи местоположение на складе** (зона-стеллаж-полка-ячейка)
 
+Если местоположение не указано - напиши "местоположение не задано".
 Если ничего не найдено - скажи об этом."""
 
         try:
