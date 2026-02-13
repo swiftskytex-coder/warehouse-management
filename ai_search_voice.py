@@ -11,7 +11,7 @@ import threading
 from warehouse_system import app, db, Product
 
 # OpenRouter API ключ
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 MODEL = "meta-llama/llama-3.1-8b-instruct"
 
 class AISearchWithVoice:
@@ -40,8 +40,12 @@ class AISearchWithVoice:
             
             # Озвучиваем если нужно
             if speak and response:
-                # Озвучиваем в отдельном потоке чтобы не блокировать
-                threading.Thread(target=self.speak, args=(response,)).start()
+                # Озвучиваем в отдельном потоке
+                import time
+                speech_thread = threading.Thread(target=self.speak, args=(response,))
+                speech_thread.daemon = False  # Ждем завершения потока
+                speech_thread.start()
+                speech_thread.join(timeout=20)  # Ждем максимум 20 секунд
             
             return response
     
@@ -114,16 +118,33 @@ class AISearchWithVoice:
     
     def speak(self, text):
         """Озвучивает текст через macOS say"""
+        import re
         try:
             # Очищаем текст от эмодзи и спецсимволов для лучшей озвучки
             clean_text = self._clean_text_for_speech(text)
             
-            # Используем macOS say команду
-            # -v Anna - русский голос (если установлен)
-            # -r 180 - скорость речи
-            subprocess.run(['say', '-r', '180', clean_text], 
-                         check=True, capture_output=True)
+            # Если текст слишком длинный, берем только первые 300 символов
+            if len(clean_text) > 300:
+                # Ищем конец предложения
+                end_pos = clean_text[:300].rfind('.')
+                if end_pos > 100:
+                    clean_text = clean_text[:end_pos+1]
+                else:
+                    clean_text = clean_text[:300] + "..."
             
+            # Используем macOS say команду с таймаутом
+            # -r 200 - скорость речи (быстрее)
+            result = subprocess.run(
+                ['say', '-r', '200', clean_text], 
+                check=True, 
+                capture_output=True,
+                timeout=15  # Таймаут 15 секунд
+            )
+            
+        except subprocess.TimeoutExpired:
+            print("⚠️ Озвучка: превышен таймаут")
+        except subprocess.CalledProcessError as e:
+            print(f"⚠️ Ошибка озвучки (код {e.returncode})")
         except Exception as e:
             print(f"⚠️ Ошибка озвучки: {e}")
     
@@ -149,7 +170,23 @@ class AISearchWithVoice:
             if not any(x in line for x in ['💰', 'Стоимость:', 'Токенов:', '$0.0000']):
                 clean_lines.append(line)
         
-        return '\n'.join(clean_lines[:10])  # Берем первые 10 строк
+        # Берем только первые 5 строк (для краткости озвучки)
+        text = '\n'.join(clean_lines[:5])
+        
+        # Убираем артикулы (цифры в начале строк или после "Артикул")
+        text = re.sub(r'\b\d+\s*:', '', text)
+        text = re.sub(r'Артикул\s*\d*\s*:', '', text, flags=re.IGNORECASE)
+        
+        # Убираем "подходит по названию" и похожие фразы
+        text = re.sub(r'подходит\s+по\s+названию', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'подходит\s+по\s+описанию', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'по\s+названию\s+подходит', '', text, flags=re.IGNORECASE)
+        
+        # Убираем лишние пробелы и пустые строки
+        text = re.sub(r'\n\s*\n', '\n', text)
+        text = re.sub(r'  +', ' ', text)
+        
+        return text.strip()
 
 def main():
     # Проверяем аргументы
@@ -176,7 +213,9 @@ def main():
         print("🔊 Озвучка включена")
         # Приветствие
         subprocess.run(['say', '-r', '200', 'Ищу товары по вашему запросу'], 
-                      check=False, capture_output=True)
+                      check=False, capture_output=True, timeout=10)
+        import time
+        time.sleep(0.5)  # Небольшая пауза между фразами
     
     print("⏳ Ищем через AI...\n")
     

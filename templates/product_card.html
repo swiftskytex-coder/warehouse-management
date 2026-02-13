@@ -496,6 +496,302 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+        
+        /* Мобильные устройства */
+        @media (max-width: 768px) {
+            * {
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+            }
+            
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                border-radius: 8px;
+                max-width: 100vw;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.2em;
+                word-break: break-word;
+            }
+            
+            .article-badge {
+                font-size: 1em;
+                padding: 6px 12px;
+                margin-top: 10px;
+            }
+            
+            .main-content {
+                padding: 15px;
+                gap: 15px;
+            }
+            
+            .photo-section {
+                order: 2;
+            }
+            
+            .info-section {
+                order: 1;
+            }
+            
+            .main-image-container {
+                min-height: 200px;
+                padding: 10px;
+            }
+            
+            .main-image {
+                max-height: 180px;
+            }
+            
+            .gallery {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+            
+            .gallery img {
+                height: 60px;
+            }
+            
+            .location-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            
+            .location-item {
+                padding: 8px;
+            }
+            
+            .location-value {
+                font-size: 1em;
+                word-break: break-all;
+            }
+            
+            .quantity-grid {
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 6px;
+            }
+            
+            .quantity-item {
+                padding: 10px 6px;
+            }
+            
+            .quantity-value {
+                font-size: 1.2em;
+            }
+            
+            .meta-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .meta-value {
+                word-break: break-all;
+            }
+            
+            .description-box {
+                padding: 15px;
+            }
+            
+            .description-text {
+                font-size: 0.95em;
+            }
+            
+            .specs-content {
+                padding: 15px;
+            }
+            
+            .spec-row {
+                flex-direction: column;
+                gap: 5px;
+                padding: 10px 0;
+            }
+            
+            .spec-name {
+                font-size: 0.9em;
+            }
+            
+            .spec-value {
+                word-break: break-all;
+                font-size: 0.95em;
+            }
+            
+            .label-section {
+                padding: 15px;
+            }
+            
+            .label-content {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            
+            .label-item {
+                padding: 8px;
+                font-size: 0.9em;
+            }
+            
+            .footer {
+                padding: 15px;
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .print-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px;
+            }
+        }
+        
+        /* Очень маленькие экраны */
+        @media (max-width: 480px) {
+            body {
+                padding: 2px;
+                font-size: 14px;
+            }
+            
+            .header {
+                padding: 12px;
+            }
+            
+            .header h1 {
+                font-size: 1em;
+                line-height: 1.3;
+            }
+            
+            .warehouse-label {
+                font-size: 0.7em;
+                padding: 3px 8px;
+            }
+            
+            .article-badge {
+                font-size: 0.9em;
+                padding: 5px 10px;
+            }
+            
+            .main-content {
+                padding: 12px;
+                gap: 12px;
+            }
+            
+            .main-image-container {
+                min-height: 150px;
+                padding: 8px;
+            }
+            
+            .main-image {
+                max-height: 140px;
+            }
+            
+            .gallery {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+            
+            .gallery img {
+                height: 50px;
+            }
+            
+            .section-title {
+                font-size: 0.95em;
+                margin-bottom: 10px;
+            }
+            
+            .location-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            
+            .location-item {
+                padding: 6px;
+            }
+            
+            .location-label {
+                font-size: 0.75em;
+            }
+            
+            .location-value {
+                font-size: 0.9em;
+            }
+            
+            .quantity-grid {
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 5px;
+            }
+            
+            .quantity-item {
+                padding: 8px 4px;
+            }
+            
+            .quantity-label {
+                font-size: 0.75em;
+            }
+            
+            .quantity-value {
+                font-size: 1.1em;
+            }
+            
+            .description-box {
+                padding: 12px;
+                font-size: 0.9em;
+            }
+            
+            .specs-header {
+                padding: 12px 15px;
+                font-size: 0.95em;
+            }
+            
+            .specs-content {
+                padding: 12px;
+            }
+            
+            .spec-row {
+                padding: 8px 0;
+            }
+            
+            .spec-name {
+                font-size: 0.85em;
+            }
+            
+            .spec-value {
+                font-size: 0.9em;
+            }
+            
+            .label-section {
+                padding: 12px;
+            }
+            
+            .label-title {
+                font-size: 0.9em;
+            }
+            
+            .label-content {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            
+            .label-item {
+                padding: 6px;
+                font-size: 0.8em;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+            
+            .footer {
+                padding: 12px;
+                font-size: 0.85em;
+            }
+        }
     </style>
 </head>
 <body>

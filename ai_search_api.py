@@ -9,7 +9,7 @@ from warehouse_system import app, db, Product
 
 ai_search_bp = Blueprint('ai_search', __name__)
 
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 MODEL = "meta-llama/llama-3.1-8b-instruct"
 
 @ai_search_bp.route('/api/ai-search', methods=['POST'])
