@@ -70,6 +70,75 @@ python warehouse_system.py
 python import_product.py 2498
 ```
 
+## 📋 Команды управления
+
+### Запуск системы
+
+```bash
+# Через основной скрипт
+python warehouse_system.py
+
+# Или через скрипт автозапуска (Linux/Mac)
+chmod +x start_warehouse.sh
+./start_warehouse.sh
+
+# Или через альтернативный скрипт
+./start_server.sh
+```
+
+### Остановка сервера
+
+```bash
+# Если запущен в терминале - нажмите Ctrl+C
+
+# Если запущен в фоне - найдите и завершите процесс
+pkill -f warehouse_system.py
+
+# Или найдите PID и завершите
+lsof -i :8080      # Найти процесс
+kill -9 <PID>      # Завершить процесс
+```
+
+### Быстрые команды
+
+```bash
+# Запуск веб-интерфейса
+python warehouse_system.py
+
+# Импорт товаров
+python import_product.py 2498                    # По артикулу
+python import_product.py "https://..."           # По URL
+
+# ИИ-поиск
+python ai_search_voice.py "запрос" --speak       # С озвучкой
+python ai_search_voice.py "запрос"               # Без озвучки
+
+# Карточки товаров
+python create_all_cards.py                       # Все товары
+python create_card_by_article.py 2498           # По артикулу
+
+# API
+curl http://localhost:8080/api/products
+curl -X POST http://localhost:8080/api/ai-search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"запрос"}'
+```
+
+### Скрипты автоматизации
+
+```bash
+# Экспорт данных
+curl http://localhost:8080/api/export/json -o export.json
+
+# Создание базы данных
+python -c "
+from warehouse_system import app, db
+with app.app_context():
+    db.create_all()
+    print('База создана')
+"
+```
+
 ## 💻 Использование
 
 ### ИИ-поиск с голосом

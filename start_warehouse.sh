@@ -18,7 +18,7 @@ with app.app_context():
 
 echo ""
 echo "🚀 Запуск сервера..."
-echo "🌐 Открой: http://localhost:5000"
+echo "🌐 Открой: http://localhost:8080"
 echo ""
 echo "Команды:"
 echo "  Ctrl+C - остановить сервер"

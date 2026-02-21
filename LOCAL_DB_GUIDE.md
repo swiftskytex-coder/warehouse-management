@@ -277,7 +277,7 @@ def import_product(article_or_url):
         driver.quit()
     
     # Отправляем в API
-    response = requests.post('http://localhost:5000/api/products', json={
+    response = requests.post('http://localhost:8080/api/products', json={
         'article': product['article'],
         'title': product['title'],
         'manufacturer': product['manufacturer'],
@@ -411,7 +411,7 @@ python import_to_db.py 768
 python import_to_db.py "https://snab-lift.ru/catalog/.../product.html"
 
 # 5. Открой веб-интерфейс
-open http://localhost:5000
+open http://localhost:8080
 ```
 
 ## Дополнительные возможности локальной базы:

@@ -22,7 +22,7 @@ source venv/bin/activate
 python warehouse_system.py
 ```
 
-Откроется веб-интерфейс: **http://localhost:5000**
+Откроется веб-интерфейс: **http://localhost:8080**
 
 ### 2. Импорт первого товара
 
@@ -37,12 +37,12 @@ python import_product.py "https://snab-lift.ru/catalog/.../product.html"
 ### 3. Открытие веб-интерфейса
 
 ```bash
-open http://localhost:5000
+open http://localhost:8080
 ```
 
 ## 📋 Возможности
 
-### 🎯 Веб-интерфейс (http://localhost:5000)
+### 🎯 Веб-интерфейс (http://localhost:8080)
 
 **Главная страница:**
 - 📊 Статистика склада (всего товаров, заканчивается, нет в наличии)
@@ -84,18 +84,18 @@ GET  /card/<article>            # HTML карточка
 
 ```bash
 # Получить все товары
-curl http://localhost:5000/api/products
+curl http://localhost:8080/api/products
 
 # Поиск
-curl "http://localhost:5000/api/products/search?q=2498"
+curl "http://localhost:8080/api/products/search?q=2498"
 
 # Импорт товара
-curl -X POST http://localhost:5000/api/import/snablift \
+curl -X POST http://localhost:8080/api/import/snablift \
   -H "Content-Type: application/json" \
   -d '{"query":"2498"}'
 
 # Обновить склад
-curl -X PUT http://localhost:5000/api/products/2498/stock \
+curl -X PUT http://localhost:8080/api/products/2498/stock \
   -H "Content-Type: application/json" \
   -d '{
     "zone": "A",
@@ -170,13 +170,13 @@ https://snab-lift.ru/catalog/.../product2.html
 Запусти:
 ```bash
 # Через веб-интерфейс:
-# 1. Открой http://localhost:5000
+# 1. Открой http://localhost:8080
 # 2. Нажми "📥 Массовый импорт"
 # 3. Вставь список
 # 4. Нажми "🚀 Начать импорт"
 
 # Или через API:
-curl -X POST http://localhost:5000/api/import/batch \
+curl -X POST http://localhost:8080/api/import/batch \
   -H "Content-Type: application/json" \
   -d '{"items": ["2498", "768", "661"]}'
 ```
@@ -199,7 +199,7 @@ curl -X POST http://localhost:5000/api/import/batch \
 ### 4. Печать карточки
 
 1. В списке товаров нажми 📄 (карточка)
-2. Или открой: http://localhost:5000/card/2498
+2. Или открой: http://localhost:8080/card/2498
 3. Нажми "🖨️ Печать"
 
 ### 5. Экспорт данных
@@ -209,7 +209,7 @@ curl -X POST http://localhost:5000/api/import/batch \
 # Нажми кнопку "📤 Экспорт JSON"
 
 # Или через API
-curl http://localhost:5000/api/export/json -o export.json
+curl http://localhost:8080/api/export/json -o export.json
 ```
 
 ## 📁 Файлы системы

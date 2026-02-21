@@ -1035,10 +1035,10 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         print("✅ База данных создана: warehouse.db")
-        print("🚀 Запуск сервера: http://localhost:5000")
+        print("🚀 Запуск сервера: http://localhost:8080")
         print("\nКоманды:")
-        print("  - Открыть интерфейс: open http://localhost:5000")
-        print("  - Добавить товар: curl -X POST http://localhost:5000/api/products")
-        print("  - Поиск: http://localhost:5000/api/products/search?q=2498")
+        print("  - Открыть интерфейс: open http://localhost:8080")
+        print("  - Добавить товар: curl -X POST http://localhost:8080/api/products")
+        print("  - Поиск: http://localhost:8080/api/products/search?q=2498")
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=8080)

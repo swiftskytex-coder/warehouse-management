@@ -671,6 +671,181 @@ def product_card(article):
     
     return render_template('product_card.html', product=product)
 
+# ========== РУЧНОЕ ДОБАВЛЕНИЕ КАРТОЧКИ ==========
+
+@app.route('/api/products/manual', methods=['POST'])
+def add_product_manual():
+    """Ручное создание карточки с минимальными данными"""
+    try:
+        data = request.get_json()
+        
+        # Обязательные поля
+        if not data.get('title'):
+            return jsonify({'success': False, 'error': 'Название обязательно'}), 400
+        
+        # Генерируем артикул если не указан
+        article = data.get('article', '').strip()
+        if not article:
+            # Генерируем артикул с префиксом A + timestamp
+            import time
+            article = f"A{int(time.time())}"
+        elif not article.startswith('A'):
+            article = f"A{article}"
+        
+        # Проверяем уникальность артикула
+        existing = Product.query.filter_by(article=article).first()
+        if existing:
+            # Если артикул уже есть, добавляем случайный суффикс
+            import random
+            article = f"{article}{random.randint(10, 99)}"
+        
+        # Создаем товар с минимальными данными
+        product = Product(
+            article=article,
+            title=data['title'],
+            manufacturer=data.get('manufacturer', ''),
+            category=data.get('category', ''),
+            price=data.get('price', ''),
+            description=data.get('description', ''),
+            url=data.get('url', ''),
+            weight=data.get('weight', ''),
+            dimensions=json.dumps(data.get('dimensions', {}), ensure_ascii=False) if data.get('dimensions') else '',
+            specifications=json.dumps(data.get('specifications', {}), ensure_ascii=False)
+        )
+        
+        db.session.add(product)
+        db.session.flush()
+        
+        # Добавляем изображения если загружены
+        images = data.get('images', [])
+        if images:
+            for i, img_url in enumerate(images[:10]):
+                image = ProductImage(
+                    product_id=product.id,
+                    image_url=img_url,
+                    is_main=(i == 0)
+                )
+                db.session.add(image)
+        
+        # Создаем складскую запись
+        stock = WarehouseStock(product_id=product.id)
+        db.session.add(stock)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Карточка создана',
+            'product': product.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/products/<article>/fetch-from-snablift', methods=['POST'])
+def fetch_from_snablift(article):
+    """Дозагрузка данных с snab-lift.ru для существующего товара"""
+    try:
+        product = Product.query.filter_by(article=article).first()
+        if not product:
+            return jsonify({'success': False, 'error': 'Товар не найден'}), 404
+        
+        # Получаем артикул для поиска на сайте (если указан)
+        data = request.get_json() or {}
+        search_article = data.get('snablift_article', article)
+        
+        from warehouse_card import create_driver, parse_product_page, find_product_by_article
+        
+        driver = create_driver()
+        
+        try:
+            # Ищем товар на сайте по указанному артикулу
+            product_url = find_product_by_article(driver, search_article)
+            if not product_url:
+                return jsonify({'success': False, 'error': f'Товар {search_article} не найден на snab-lift.ru'}), 404
+            
+            # Парсим страницу
+            product_data = parse_product_page(driver, product_url)
+            
+            updated_fields = []
+            
+            # Обновляем артикул, если полученный с сайта отличается
+            new_article = product_data['article']
+            if new_article != article:
+                # Проверяем, свободен ли новый артикул
+                existing = Product.query.filter_by(article=new_article).first()
+                if existing and existing.id != product.id:
+                    return jsonify({'success': False, 'error': f'Артикул {new_article} уже используется другим товаром'}), 409
+                product.article = new_article
+                updated_fields.append('артикул')
+            
+            # Обновляем остальные поля только если они пустые
+            if not product.title and product_data.get('title'):
+                product.title = product_data['title']
+                updated_fields.append('название')
+            
+            if not product.manufacturer and product_data.get('manufacturer'):
+                product.manufacturer = product_data['manufacturer']
+                updated_fields.append('производитель')
+            
+            if not product.category and product_data.get('category'):
+                product.category = product_data['category']
+                updated_fields.append('категория')
+            
+            if not product.price and product_data.get('price'):
+                product.price = product_data['price']
+                updated_fields.append('цена')
+            
+            if not product.description and product_data.get('description'):
+                product.description = product_data['description']
+                updated_fields.append('описание')
+            
+            if not product.weight and product_data.get('weight'):
+                product.weight = product_data['weight']
+                updated_fields.append('вес')
+            
+            if not product.dimensions and product_data.get('dimensions'):
+                product.dimensions = ', '.join([f"{k}: {v}" for k, v in product_data.get('dimensions', {}).items()])
+                updated_fields.append('габариты')
+            
+            if not product.specifications and product_data.get('specifications'):
+                product.specifications = json.dumps(product_data.get('specifications', {}), ensure_ascii=False)
+                updated_fields.append('характеристики')
+            
+            # Сохраняем URL для будущего использования
+            if product_data.get('url') and not product.url:
+                product.url = product_data['url']
+                updated_fields.append('URL')
+            
+            # Добавляем изображения если их нет
+            existing_images_count = ProductImage.query.filter_by(product_id=product.id).count()
+            if existing_images_count == 0 and product_data.get('images'):
+                for i, img_url in enumerate(product_data.get('images', [])[:10]):
+                    image = ProductImage(
+                        product_id=product.id,
+                        image_url=img_url,
+                        is_main=(i == 0)
+                    )
+                    db.session.add(image)
+                updated_fields.append('изображения')
+            
+            product.updated_at = datetime.now()
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': f'Дозагружены данные: {", ".join(updated_fields) if updated_fields else "ничего не обновлено (все данные уже есть)"}',
+                'product': product.to_dict()
+            })
+            
+        finally:
+            driver.quit()
+            
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # ========== ИИ-ПОИСК ==========
 
 # Импортируем и регистрируем ИИ-поиск (если есть API ключ)
@@ -690,17 +865,20 @@ if __name__ == '__main__':
         print("✅ ЛОКАЛЬНАЯ БАЗА ДАННЫХ СКЛАДА")
         print("=" * 70)
         print("\n📁 База данных: warehouse.db")
-        print("🌐 Веб-интерфейс: http://localhost:5000")
+        print("🌐 Веб-интерфейс: http://localhost:8080")
         print("\n📋 API Endpoints:")
         print("  GET  /api/products - Список товаров")
         print("  GET  /api/products/<article> - Один товар")
         print("  POST /api/products - Добавить товар")
+        print("  POST /api/products/manual - Ручное создание карточки")
+        print("  GET  /api/products/<article>/fetch-from-snablift - Дозагрузка с snab-lift.ru")
         print("  PUT  /api/products/<article>/stock - Обновить склад")
         print("  POST /api/import/snablift - Импорт с snab-lift.ru")
         print("  POST /api/import/batch - Массовый импорт")
         print("\n💡 Примеры:")
-        print("  curl http://localhost:5000/api/products")
-        print("  curl -X POST http://localhost:5000/api/import/snablift -d '{\"query\":\"2498\"}'")
+        print("  curl http://localhost:8080/api/products")
+        print("  curl -X POST http://localhost:8080/api/products/manual -H 'Content-Type: application/json' -d '{\"title\":\"Мой товар\"}'")
+        print("  curl -X POST http://localhost:8080/api/products/2498/fetch-from-snablift")
         print("=" * 70)
     
     app.run(debug=True, host='0.0.0.0', port=8080, use_reloader=False)

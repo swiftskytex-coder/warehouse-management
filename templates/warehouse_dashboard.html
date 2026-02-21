@@ -243,6 +243,135 @@
             font-size: 32px;
         }
         
+        #imagePreview img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 2px solid #667eea;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        #imagePreview img:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Адаптивность таблицы для мобильных устройств */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -15px;
+            padding: 0 15px;
+        }
+        
+        .products-table {
+            min-width: 900px;
+            font-size: 14px;
+        }
+        
+        .products-table th,
+        .products-table td {
+            padding: 12px 8px;
+        }
+        
+        .products-table th:nth-child(3),
+        .products-table td:nth-child(3) {
+            /* Колонка "Название" - разрешаем перенос */
+            white-space: normal;
+            max-width: 250px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .products-table th:not(:nth-child(3)),
+        .products-table td:not(:nth-child(3)) {
+            /* Остальные колонки - фиксированная ширина без переноса */
+            white-space: nowrap;
+        }
+        
+        .product-image {
+            width: 60px;
+            height: 60px;
+            min-width: 60px;
+        }
+        
+        .product-title {
+            max-width: 200px;
+            white-space: normal;
+            line-height: 1.3;
+        }
+        
+        .location-cell {
+            font-size: 0.85em;
+            padding: 3px 8px;
+        }
+        
+        /* Медиа-запросы для экранов меньше 768px */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .control-panel {
+                padding: 15px;
+            }
+            
+            .control-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+            
+            .filter-group {
+                flex: 1 1 100%;
+                min-width: 150px;
+            }
+            
+            .products-table {
+                font-size: 12px;
+                min-width: 800px;
+            }
+            
+            .products-table th,
+            .products-table td {
+                padding: 8px 4px;
+            }
+            
+            .products-table th:nth-child(3),
+            .products-table td:nth-child(3) {
+                max-width: 150px;
+                -webkit-line-clamp: 2;
+            }
+            
+            .product-image {
+                width: 50px;
+                height: 50px;
+                min-width: 50px;
+            }
+            
+            .pagination {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .pagination button {
+                width: 100%;
+            }
+        }
+        
         .article-link {
             color: #667eea;
             font-weight: 600;
@@ -498,9 +627,48 @@
         /* Импорт статус */
         .import-status {
             margin-top: 15px;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 10px;
+            border-radius: 5px;
             display: none;
+        }
+        
+        .import-status.active {
+            display: block;
+        }
+        
+        .import-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .import-status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .manual-status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .manual-status.active {
+            display: block;
+        }
+        
+        .manual-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .manual-status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
         
         .import-status.active {
@@ -718,12 +886,15 @@
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="🔍 Обычный поиск по артикулу, названию или производителю..." onkeyup="handleSearch(event)">
                 </div>
-                <button class="btn btn-success" onclick="showImportModal()">
-                    ➕ Импорт с snab-lift.ru
-                </button>
-                <button class="btn btn-primary" onclick="showBatchImportModal()">
-                    📥 Массовый импорт
-                </button>
+                 <button class="btn btn-success" onclick="showImportModal()">
+                     ➕ Импорт с snab-lift.ru
+                 </button>
+                 <button class="btn btn-primary" onclick="showBatchImportModal()">
+                     📥 Массовый импорт
+                 </button>
+                 <button class="btn btn-secondary" onclick="showManualAddModal()">
+                     ✏️ Добавить карточку
+                 </button>
             </div>
             
             <!-- 🤖 ИИ-поиск -->
@@ -764,7 +935,8 @@
         
         <!-- Таблица товаров -->
         <div class="products-container">
-            <table class="products-table">
+            <div class="table-responsive">
+                <table class="products-table">
                 <thead>
                     <tr>
                         <th>Фото</th>
@@ -786,6 +958,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div> <!-- /table-responsive -->
             
             <!-- Пагинация -->
             <div class="pagination" id="pagination" style="display: none;">
@@ -850,6 +1023,73 @@ https://snab-lift.ru/catalog/.../product.html
         </div>
     </div>
     
+    <!-- Модальное окно ручного добавления карточки -->
+    <div class="modal" id="manualAddModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2>✏️ Добавить карточку товара</h2>
+                <button class="close-btn" onclick="closeManualAddModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-section">
+                    <h3>📋 Основная информация</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Артикул <small>(оставьте пустым для авто-генерации с префиксом "A")</small></label>
+                            <input type="text" id="manualArticle" placeholder="например: 2498 или оставьте пустым">
+                        </div>
+                        <div class="form-group required">
+                            <label>Название *</label>
+                            <input type="text" id="manualTitle" placeholder="Например: Прерыватель (диск) D=40мм">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Производитель</label>
+                            <input type="text" id="manualManufacturer" placeholder="МЛЗ, Otis, КМЗ...">
+                        </div>
+                        <div class="form-group">
+                            <label>Категория</label>
+                            <input type="text" id="manualCategory" placeholder="Прерыватели, Двигатели...">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Описание</label>
+                            <textarea id="manualDescription" rows="3" placeholder="Подробное описание товара..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>📷 Изображения товара</h3>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Загрузка с компьютера/телефона</label>
+                            <input type="file" id="manualImageFiles" multiple accept="image/*" style="display: none;" onchange="handleImageFiles(this.files)">
+                            <button class="btn btn-secondary" onclick="document.getElementById('manualImageFiles').click()" style="margin-bottom: 10px;">
+                                📁 Выбрать файлы
+                            </button>
+                            <div id="imagePreview" style="display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0;"></div>
+                            <small style="display: block; margin-bottom: 10px; color: #666;">
+                                Или вставьте URL изображений (по одному на строку)
+                            </small>
+                            <textarea id="manualImages" rows="4" placeholder="https://snab-lift.ru/upload/iblock/..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="manualStatus" class="manual-status"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeManualAddModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="saveManualProduct()">
+                    💾 Сохранить карточку
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Модальное окно редактирования -->
     <div class="modal" id="editModal">
         <div class="modal-content">
@@ -870,6 +1110,25 @@ https://snab-lift.ru/catalog/.../product.html
                             <input type="text" id="editTitle" readonly>
                         </div>
                     </div>
+                </div>
+                
+                <!-- Дозагрузка с snab-lift.ru -->
+                <div class="form-section" style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffc107;">
+                    <h3 style="color: #856404; margin-bottom: 10px;">🔄 Дозагрузка с snab-lift.ru</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Артикул на snab-lift.ru</label>
+                            <input type="text" id="editSnabliftArticle" placeholder="Введите артикул с сайта">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button class="btn" onclick="fetchFromSnabliftEdit()" style="background: #ffc107; color: #212529; width: 100%;">
+                                📥 Загрузить данные
+                            </button>
+                        </div>
+                    </div>
+                    <small style="color: #856404;">
+                        Данные будут автоматически обновлены, а артикул товара будет изменен на указанный
+                    </small>
                 </div>
                 
                 <div class="form-section">
@@ -1362,6 +1621,170 @@ https://snab-lift.ru/catalog/.../product.html
             const status = document.getElementById('batchImportStatus');
             status.innerHTML = message;
             status.className = 'import-status active' + (type ? ' ' + type : '');
+        }
+        
+        // ========== РУЧНОЕ ДОБАВЛЕНИЕ КАРТОЧКИ ==========
+        function showManualAddModal() {
+            document.getElementById('manualAddModal').classList.add('active');
+            // Очищаем форму
+            document.getElementById('manualArticle').value = '';
+            document.getElementById('manualTitle').value = '';
+            document.getElementById('manualManufacturer').value = '';
+            document.getElementById('manualCategory').value = '';
+            document.getElementById('manualDescription').value = '';
+            document.getElementById('manualImages').value = '';
+            document.getElementById('manualImageFiles').value = '';
+            document.getElementById('imagePreview').innerHTML = '';
+            selectedFiles = [];
+            hideManualStatus();
+            setTimeout(() => document.getElementById('manualTitle').focus(), 100);
+        }
+        
+        function closeManualAddModal() {
+            document.getElementById('manualAddModal').classList.remove('active');
+        }
+        
+        function hideManualStatus() {
+            const status = document.getElementById('manualStatus');
+            status.className = 'manual-status';
+            status.innerHTML = '';
+        }
+        
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        let selectedFiles = [];
+        
+        function handleImageFiles(files) {
+            selectedFiles = Array.from(files);
+            
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            
+            selectedFiles.forEach((file, index) => {
+                if (!file.type.startsWith('image/')) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'width: 80px; height: 80px; object-fit: cover; border-radius: 5px; border: 2px solid #667eea; cursor: pointer;';
+                    img.onclick = () => removeFile(index);
+                    img.title = 'Кликнуть для удаления';
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            
+            // Обновляем input file
+            const input = document.getElementById('manualImageFiles');
+            const dt = new DataTransfer();
+            selectedFiles.forEach(file => dt.items.add(file));
+            input.files = dt.files;
+            
+            // Обновляем превью
+            handleImageFiles(selectedFiles);
+        }
+        
+        async function saveManualProduct() {
+            const article = document.getElementById('manualArticle').value.trim();
+            const title = document.getElementById('manualTitle').value.trim();
+            const manufacturer = document.getElementById('manualManufacturer').value.trim();
+            const category = document.getElementById('manualCategory').value.trim();
+            const description = document.getElementById('manualDescription').value.trim();
+            
+            if (!title) {
+                showManualStatus('Введите название товара', 'error');
+                return;
+            }
+            
+            // Подготавливаем изображения из URL
+            const imagesText = document.getElementById('manualImages').value.trim();
+            let images = imagesText ? imagesText.split('\n').map(url => url.trim()).filter(url => url) : [];
+            
+            // Добавляем загруженные файлы
+            const fileInput = document.getElementById('manualImageFiles');
+            if (fileInput.files && fileInput.files.length > 0) {
+                const files = Array.from(fileInput.files);
+                for (const file of files) {
+                    if (!file.type.startsWith('image/')) continue;
+                    const base64 = await readFileAsBase64(file);
+                    images.push(base64);
+                }
+            }
+            
+            showManualStatus('⏳ Сохраняем карточку...', '');
+            
+            try {
+                const response = await fetch('/api/products/manual', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        article: article,
+                        title: title,
+                        manufacturer: manufacturer,
+                        category: category,
+                        description: description,
+                        images: images
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showManualStatus(`✅ ${data.message}<br>📦 Артикул: ${data.product.article}`, 'success');
+                    setTimeout(() => {
+                        closeManualAddModal();
+                        loadProducts();
+                    }, 1500);
+                } else {
+                    showManualStatus(`❌ ${data.error}`, 'error');
+                }
+            } catch (e) {
+                showManualStatus(`❌ Ошибка: ${e.message}`, 'error');
+            }
+        }
+        
+        async function fetchFromSnabliftEdit() {
+            const snabliftArticle = document.getElementById('editSnabliftArticle').value.trim();
+            if (!snabliftArticle) {
+                alert('Введите артикул с snab-lift.ru');
+                return;
+            }
+            
+            if (!confirm(`Дозагрузить данные с snab-lift.ru для товара ${currentProduct.article} (по артикулу ${snabliftArticle})?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/products/${currentProduct.article}/fetch-from-snablift`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({snablift_article: snabliftArticle})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ ${data.message}`);
+                    closeEditModal();
+                    loadProducts();
+                } else {
+                    alert(`❌ ${data.error}`);
+                }
+            } catch (e) {
+                alert(`❌ Ошибка: ${e.message}`);
+            }
         }
         
         // ========== РЕДАКТИРОВАНИЕ ==========
