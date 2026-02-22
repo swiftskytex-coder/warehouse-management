@@ -884,29 +884,20 @@
         <div class="control-panel">
             <div class="control-row">
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="🔍 Обычный поиск по артикулу, названию или производителю..." onkeyup="handleSearch(event)">
+                    <input type="text" id="searchInput" placeholder="🔍 Поиск по артикулу, названию или производителю..." onkeyup="handleSearch(event)">
                 </div>
-                 <button class="btn btn-success" onclick="showImportModal()">
-                     ➕ Импорт с snab-lift.ru
-                 </button>
-                 <button class="btn btn-primary" onclick="showBatchImportModal()">
-                     📥 Массовый импорт
-                 </button>
-                 <button class="btn btn-secondary" onclick="showManualAddModal()">
-                     ✏️ Добавить карточку
-                 </button>
-            </div>
-            
-            <!-- 🤖 ИИ-поиск -->
-            <div class="control-row" style="background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%); padding: 15px; border-radius: 8px; border: 2px dashed #667eea;">
-                <div class="search-box" style="flex: 1;">
-                    <input type="text" id="aiSearchInput" placeholder="🤖 ИИ-поиск: напиши что нужно (например: 'красная кнопка для вызова лифта')..." style="border-color: #667eea;">
-                </div>
-                <button class="btn" onclick="performAISearch()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                    🤖 ИИ Найти
+                <button class="btn btn-success" onclick="showImportModal()">
+                    ➕ Импорт с snab-lift.ru
                 </button>
-            </div>
+                <button class="btn btn-primary" onclick="showBatchImportModal()">
+                    📥 Массовый импорт
+                </button>
+                <button class="btn btn-secondary" onclick="showManualAddModal()">
+                    ✏️ Добавить карточку
+                </button>
+            </div> <!-- /control-row -->
             
+            <!-- Вторая строка: фильтры -->
             <div class="control-row">
                 <div class="filter-group">
                     <label>Зона:</label>
@@ -1399,97 +1390,6 @@ https://snab-lift.ru/catalog/.../product.html
             }
         }
         
-        // ========== ИИ-ПОИСК ==========
-        async function performAISearch() {
-            const query = document.getElementById('aiSearchInput').value.trim();
-            if (!query) {
-                alert('Введите запрос для ИИ-поиска');
-                return;
-            }
-            
-            const btn = document.querySelector('button[onclick="performAISearch()"]');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '⏳ Думаю...';
-            btn.disabled = true;
-            
-            try {
-                const response = await fetch('/api/ai-search', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({query: query})
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Показываем результат в модальном окне
-                    showAIResult(query, data.answer, data.cost);
-                } else {
-                    alert('Ошибка: ' + data.error);
-                }
-            } catch (e) {
-                alert('Ошибка соединения: ' + e.message);
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        }
-        
-        function showAIResult(query, answer, cost) {
-            // Создаем модальное окно для результата
-            const modal = document.createElement('div');
-            modal.className = 'modal active';
-            modal.innerHTML = `
-                <div class="modal-content" style="max-width: 600px;">
-                    <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        <h2>🤖 Результат ИИ-поиска</h2>
-                        <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
-                            <strong>🔍 Запрос:</strong> ${query}
-                        </div>
-                        <div style="white-space: pre-wrap; line-height: 1.6;">${answer}</div>
-                        <div style="margin-top: 15px; text-align: right; color: #666; font-size: 0.9em;">
-                            💰 Стоимость: $${cost}
-                        </div>
-                    </div>
-                    <div class="modal-footer" style="display: flex; justify-content: space-between;">
-                        <button class="btn" onclick="speakText('${answer.replace(/'/g, "\\'").replace(/"/g, '"').replace(/\n/g, ' ')}')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                            🔊 Озвучить
-                        </button>
-                        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Закрыть</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
-        
-        // ========== ОЗВУЧКА ==========
-        function speakText(text) {
-            // Очищаем текст от лишних символов
-            const cleanText = text
-                .replace(/💰[^]*$/, '') // Убираем стоимость
-                .replace(/[💰🔍✅❌⚠️📦🏷️📝📍📊📁⚖️]/g, '') // Убираем эмодзи
-                .replace(/[#*•]/g, '')
-                .substring(0, 500); // Ограничиваем длину
-            
-            // Проверяем поддержку Web Speech API
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(cleanText);
-                utterance.lang = 'ru-RU';
-                utterance.rate = 1;
-                window.speechSynthesis.speak(utterance);
-            } else {
-                // Fallback: вызываем backend озвучку
-                fetch('/api/speak', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text: cleanText})
-                }).catch(e => console.log('Озвучка недоступна'));
-            }
-        }
-        
         // ========== ИМПОРТ ==========
         function showImportModal() {
             document.getElementById('importModal').classList.add('active');
@@ -1650,6 +1550,12 @@ https://snab-lift.ru/catalog/.../product.html
             status.innerHTML = '';
         }
         
+        function showManualStatus(message, type) {
+            const status = document.getElementById('manualStatus');
+            status.innerHTML = message;
+            status.className = 'manual-status active' + (type ? ' ' + type : '');
+        }
+        
         function readFileAsBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1739,7 +1645,20 @@ https://snab-lift.ru/catalog/.../product.html
                     })
                 });
                 
-                const data = await response.json();
+                // Отладочная информация
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                const responseText = await response.text();
+                console.log('Response body:', responseText);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    showManualStatus(`❌ Сервер вернул ошибку (статус ${response.status}). Проверьте консоль (F12).`, 'error');
+                    return;
+                }
                 
                 if (data.success) {
                     showManualStatus(`✅ ${data.message}<br>📦 Артикул: ${data.product.article}`, 'success');
@@ -1748,10 +1667,11 @@ https://snab-lift.ru/catalog/.../product.html
                         loadProducts();
                     }, 1500);
                 } else {
-                    showManualStatus(`❌ ${data.error}`, 'error');
+                    showManualStatus(`❌ ${data.error || 'Неизвестная ошибка'}`, 'error');
                 }
             } catch (e) {
-                showManualStatus(`❌ Ошибка: ${e.message}`, 'error');
+                console.error('Fetch error:', e);
+                showManualStatus(`❌ Ошибка сети: ${e.message}`, 'error');
             }
         }
         

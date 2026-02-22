@@ -229,6 +229,81 @@ def get_product(article):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ========== РУЧНОЕ ДОБАВЛЕНИЕ КАРТОЧКИ ==========
+
+@app.route('/api/products/manual', methods=['POST'])
+def add_product_manual():
+    """Ручное создание карточки с минимальными данными"""
+    print(">>> add_product_manual called")  # Отладка
+    try:
+        data = request.get_json()
+        print(">>> Received data:", data)  # Отладка
+        
+        # Обязательные поля
+        if not data.get('title'):
+            return jsonify({'success': False, 'error': 'Название обязательно'}), 400
+        
+        # Генерируем артикул если не указан
+        article = data.get('article', '').strip()
+        if not article:
+            # Генерируем артикул с префиксом A + timestamp
+            import time
+            article = f"A{int(time.time())}"
+        elif not article.startswith('A'):
+            article = f"A{article}"
+        
+        # Проверяем уникальность артикула
+        existing = Product.query.filter_by(article=article).first()
+        if existing:
+            # Если артикул уже есть, добавляем случайный суффикс
+            import random
+            article = f"{article}{random.randint(10, 99)}"
+        
+        # Создаем товар с минимальными данными
+        product = Product(
+            article=article,
+            title=data['title'],
+            manufacturer=data.get('manufacturer', ''),
+            category=data.get('category', ''),
+            price=data.get('price', ''),
+            description=data.get('description', ''),
+            url=data.get('url', ''),
+            weight=data.get('weight', ''),
+            dimensions=json.dumps(data.get('dimensions', {}), ensure_ascii=False) if data.get('dimensions') else '',
+            specifications=json.dumps(data.get('specifications', {}), ensure_ascii=False)
+        )
+        
+        db.session.add(product)
+        db.session.flush()
+        
+        # Добавляем изображения если загружены
+        images = data.get('images', [])
+        if images:
+            for i, img_url in enumerate(images[:10]):
+                image = ProductImage(
+                    product_id=product.id,
+                    image_url=img_url,
+                    is_main=(i == 0)
+                )
+                db.session.add(image)
+        
+        # Создаем складскую запись
+        stock = WarehouseStock(product_id=product.id)
+        db.session.add(stock)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Карточка создана',
+            'product': product.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f">>> Error: {e}")  # Отладка
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/products', methods=['POST'])
 def add_product():
     """Добавить новый товар"""
@@ -673,76 +748,6 @@ def product_card(article):
 
 # ========== РУЧНОЕ ДОБАВЛЕНИЕ КАРТОЧКИ ==========
 
-@app.route('/api/products/manual', methods=['POST'])
-def add_product_manual():
-    """Ручное создание карточки с минимальными данными"""
-    try:
-        data = request.get_json()
-        
-        # Обязательные поля
-        if not data.get('title'):
-            return jsonify({'success': False, 'error': 'Название обязательно'}), 400
-        
-        # Генерируем артикул если не указан
-        article = data.get('article', '').strip()
-        if not article:
-            # Генерируем артикул с префиксом A + timestamp
-            import time
-            article = f"A{int(time.time())}"
-        elif not article.startswith('A'):
-            article = f"A{article}"
-        
-        # Проверяем уникальность артикула
-        existing = Product.query.filter_by(article=article).first()
-        if existing:
-            # Если артикул уже есть, добавляем случайный суффикс
-            import random
-            article = f"{article}{random.randint(10, 99)}"
-        
-        # Создаем товар с минимальными данными
-        product = Product(
-            article=article,
-            title=data['title'],
-            manufacturer=data.get('manufacturer', ''),
-            category=data.get('category', ''),
-            price=data.get('price', ''),
-            description=data.get('description', ''),
-            url=data.get('url', ''),
-            weight=data.get('weight', ''),
-            dimensions=json.dumps(data.get('dimensions', {}), ensure_ascii=False) if data.get('dimensions') else '',
-            specifications=json.dumps(data.get('specifications', {}), ensure_ascii=False)
-        )
-        
-        db.session.add(product)
-        db.session.flush()
-        
-        # Добавляем изображения если загружены
-        images = data.get('images', [])
-        if images:
-            for i, img_url in enumerate(images[:10]):
-                image = ProductImage(
-                    product_id=product.id,
-                    image_url=img_url,
-                    is_main=(i == 0)
-                )
-                db.session.add(image)
-        
-        # Создаем складскую запись
-        stock = WarehouseStock(product_id=product.id)
-        db.session.add(stock)
-        
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Карточка создана',
-            'product': product.to_dict()
-        }), 201
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
-
 @app.route('/api/products/<article>/fetch-from-snablift', methods=['POST'])
 def fetch_from_snablift(article):
     """Дозагрузка данных с snab-lift.ru для существующего товара"""
@@ -845,16 +850,6 @@ def fetch_from_snablift(article):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
-
-# ========== ИИ-ПОИСК ==========
-
-# Импортируем и регистрируем ИИ-поиск (если есть API ключ)
-try:
-    from ai_search_api import ai_search_bp
-    app.register_blueprint(ai_search_bp)
-    print("✅ ИИ-поиск подключен")
-except Exception as e:
-    print(f"⚠️ ИИ-поиск не подключен: {e}")
 
 # ========== ЗАПУСК ==========
 
